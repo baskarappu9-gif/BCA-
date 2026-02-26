@@ -29,8 +29,12 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response.data,
   (error) => {
-    const errorMessage = error.response?.data?.message || error.message || 'An error occurred';
-    console.error('API Error:', errorMessage);
+    const errorMessage = error.response?.data?.message || (error.response?.data?.error) || error.message || 'An error occurred';
+    console.error('API Error Details:', {
+      message: errorMessage,
+      status: error.response?.status,
+      data: error.response?.data
+    });
     return Promise.reject(new Error(errorMessage));
   }
 );
@@ -38,9 +42,11 @@ apiClient.interceptors.response.use(
 // API functions
 
 // Predict property price
+// Predict property price
 export const predictPrice = async (propertyData) => {
   try {
-    const response = await apiClient.post(API_ENDPOINTS.PREDICT, propertyData);
+    // Direct call to ML service on port 8000
+    const response = await apiClient.post('http://localhost:8000/predict', propertyData);
     return response;
   } catch (error) {
     throw error;
@@ -114,7 +120,7 @@ export const uploadCSV = async (file, onUploadProgress) => {
   try {
     const formData = new FormData();
     formData.append('csv', file);
-    
+
     const response = await apiClient.post(API_ENDPOINTS.UPLOAD_CSV, formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
@@ -126,7 +132,7 @@ export const uploadCSV = async (file, onUploadProgress) => {
         }
       }
     });
-    
+
     return response;
   } catch (error) {
     throw error;
@@ -140,7 +146,7 @@ export const uploadImages = async (files, onUploadProgress) => {
     files.forEach((file) => {
       formData.append('images', file);
     });
-    
+
     const response = await apiClient.post(API_ENDPOINTS.UPLOAD_IMAGES, formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
@@ -152,7 +158,7 @@ export const uploadImages = async (files, onUploadProgress) => {
         }
       }
     });
-    
+
     return response;
   } catch (error) {
     throw error;

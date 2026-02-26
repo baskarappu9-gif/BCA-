@@ -20,7 +20,9 @@ export const PROPERTY_TYPES = [
   { value: 'Penthouse', label: 'Penthouse' },
   { value: 'Studio', label: 'Studio' },
   { value: 'Independent House', label: 'Independent House' },
-  { value: 'Builder Floor', label: 'Builder Floor' }
+  { value: 'Builder Floor', label: 'Builder Floor' },
+  { value: 'Commercial Space', label: 'Commercial Space' },
+  { value: 'Farmhouse', label: 'Farmhouse' }
 ];
 
 // Major cities in India

@@ -1,77 +1,232 @@
-@import url('https://fonts.googleapis.com/css2?family=Urbanist:wght@400;600;700;800&family=Space+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
-  * {
-    @apply box-border;
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 172 66% 50%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 172 66% 50%;
+
+    --radius: 0.5rem;
   }
-  
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 172 66% 50%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 172 66% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
   body {
-    @apply font-sans antialiased bg-gray-50 text-gray-900;
+    @apply bg-background text-foreground font-sans;
+    /* Dark gradient background as core atmosphere */
+    background: linear-gradient(to bottom, #0a0a0a, #1a1a2e);
+    color: white;
+    min-height: 100vh;
+    overflow-x: hidden;
   }
 }
 
 @layer components {
-  .btn-primary {
-    @apply px-6 py-3 bg-gradient-to-r from-primary-500 to-secondary-600 text-white rounded-xl font-semibold hover:from-primary-600 hover:to-secondary-700 transition-all transform hover:scale-105 shadow-lg;
+
+  /* Glassmorphism Utility */
+  .glassmorphism {
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
   }
-  
-  .btn-secondary {
-    @apply px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-all;
+
+  .glass-card {
+    @apply glassmorphism rounded-2xl p-6 shadow-xl transition-all duration-300;
   }
-  
-  .card {
-    @apply bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all transform hover:-translate-y-1;
+
+  /* Floating Animation */
+  @keyframes float {
+    0% {
+      transform: translateY(0px);
+    }
+
+    50% {
+      transform: translateY(-10px);
+    }
+
+    100% {
+      transform: translateY(0px);
+    }
   }
-  
-  .input-field {
-    @apply w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary-500 focus:outline-none transition-all;
+
+  .floating-animation,
+  .animate-float {
+    /* animation: float 6s ease-in-out infinite; */
   }
-  
-  .gradient-card {
-    @apply bg-gradient-to-br from-primary-500 to-secondary-600 rounded-2xl p-8 text-white shadow-2xl;
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
   }
-  
-  .animation-delay-200 {
-    animation-delay: 200ms;
+
+  .animate-fade-in {
+    animation: fadeIn 0.8s ease-out forwards;
   }
-  
-  .animation-delay-400 {
-    animation-delay: 400ms;
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
-  
-  .animation-delay-600 {
-    animation-delay: 600ms;
+
+  .animate-fade-in-up {
+    animation: fadeInUp 0.8s ease-out forwards;
   }
-  
-  .animation-delay-800 {
-    animation-delay: 800ms;
+
+  @keyframes pulseSlow {
+
+    0%,
+    100% {
+      opacity: 1;
+    }
+
+    50% {
+      opacity: 0.5;
+    }
   }
-  
-  .animation-delay-2000 {
-    animation-delay: 2s;
+
+  .animate-pulse-slow {
+    animation: pulseSlow 3s ease-in-out infinite;
+  }
+
+  /* Glow Effects */
+  .glow-cyan {
+    box-shadow: 0 0 20px rgba(0, 217, 255, 0.3);
+  }
+
+  .glow-cyan-input:focus {
+    box-shadow: 0 0 15px rgba(0, 217, 255, 0.2);
+    border-color: rgba(0, 217, 255, 0.5);
+  }
+
+  /* Input fields with new style */
+  .input-field-glass {
+    @apply w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:border-teal-400 focus:ring-1 focus:ring-teal-400 transition-all;
+  }
+
+  /* Buttons */
+  .btn-primary-glow {
+    @apply px-6 py-3 bg-gradient-to-r from-teal-500 to-cyan-500 text-black font-bold rounded-xl hover:scale-105 transition-all duration-300;
+  }
+
+  .btn-primary-glow:hover {
+    box-shadow: 0 0 20px rgba(0, 217, 255, 0.4);
+  }
+
+  .btn-secondary-glass {
+    @apply px-6 py-3 glassmorphism text-white font-semibold rounded-xl hover:bg-white/10 transition-all duration-300;
+  }
+
+  /* Typography */
+  .text-gradient-cyan {
+    @apply text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-cyan-400;
   }
 }
 
 @layer utilities {
-  .text-gradient {
-    @apply text-transparent bg-clip-text bg-gradient-to-r from-primary-500 to-secondary-600;
+  .animation-delay-100 {
+    animation-delay: 100ms;
   }
-  
-  .line-clamp-2 {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+
+  .animation-delay-200 {
+    animation-delay: 200ms;
   }
-  
-  .line-clamp-3 {
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
+
+  .animation-delay-300 {
+    animation-delay: 300ms;
+  }
+
+  .animation-delay-400 {
+    animation-delay: 400ms;
+  }
+
+  .animation-delay-500 {
+    animation-delay: 500ms;
+  }
+
+  .animation-delay-600 {
+    animation-delay: 600ms;
+  }
+
+  .animation-delay-800 {
+    animation-delay: 800ms;
+  }
+
+  .perspective-1000 {
+    perspective: 1000px;
   }
 }

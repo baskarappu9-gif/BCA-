@@ -18,7 +18,7 @@ export const predictPrice = async (req, res) => {
     } = req.body;
 
     // Validate required fields
-    if (!area || !propertyType || !size || !bedrooms || !bathrooms || !yearBuilt || !age) {
+    if (!area || !propertyType || !size || !bedrooms || !bathrooms || !yearBuilt || age === undefined || age === null) {
       return res.status(400).json({
         success: false,
         message: 'Missing required fields'
@@ -48,10 +48,10 @@ export const predictPrice = async (req, res) => {
 
     } catch (mlError) {
       console.log('ML service unavailable, using fallback calculation');
-      
+
       // Fallback to simple calculation if ML service is down
       const prediction = calculatePriceFallback(req.body);
-      
+
       return res.json({
         success: true,
         data: prediction,
@@ -72,22 +72,22 @@ export const predictPrice = async (req, res) => {
 // Fallback price calculation
 const calculatePriceFallback = (data) => {
   const { size, age, amenities = [] } = data;
-  
+
   // Base price calculation
   const basePrice = parseFloat(size) * 8500;
-  
+
   // Location multiplier (can be enhanced with actual data)
   const locationMultiplier = 1.2;
-  
+
   // Amenity bonus
   const amenityBonus = amenities.length * 50000;
-  
+
   // Age depreciation (2% per year)
-  const ageDepreciation = parseInt(age) * 0.02;
-  
+  const ageDepreciation = (parseInt(age) || 0) * 0.02;
+
   // Calculate predicted price
   const predictedPrice = (basePrice * locationMultiplier + amenityBonus) * (1 - ageDepreciation);
-  
+
   // Generate 5-year forecast with 8% annual appreciation
   const forecast = [];
   for (let i = 0; i < 5; i++) {
@@ -96,7 +96,7 @@ const calculatePriceFallback = (data) => {
       value: Math.round(predictedPrice * Math.pow(1.08, i))
     });
   }
-  
+
   return {
     predictedPrice: Math.round(predictedPrice),
     priceRange: {
@@ -117,7 +117,7 @@ const calculatePriceFallback = (data) => {
 export const getAreaAnalysis = async (req, res) => {
   try {
     const { city } = req.query;
-    
+
     if (!city) {
       return res.status(400).json({
         success: false,

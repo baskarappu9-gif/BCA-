@@ -1,14 +1,28 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="PriceWatch - AI-Powered Real Estate Price Prediction and Market Analysis for India" />
-    <title>PriceWatch - ML-Powered Real Estate Intelligence</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description"
+    content="PriceWatch - AI-Powered Real Estate Price Prediction and Market Analysis for India" />
+  <title>PriceWatch - ML-Powered Real Estate Intelligence</title>
+  <script>
+    console.log("Error handler initialized");
+    window.onerror = function (msg, url, lineNo, columnNo, error) {
+      const div = document.createElement('div');
+      div.style.cssText = 'color: red; padding: 20px; background: white; position: fixed; inset: 0; z-index: 9999; overflow: auto; text-align: left; font-family: sans-serif;';
+      div.innerHTML = '<h1 style="margin: 0 0 10px 0;">Runtime Error</h1><p><b>' + msg + '</b></p><p>URL: ' + url + '</p><p>Line: ' + lineNo + ':' + columnNo + '</p><pre style="background: #fdf2f2; padding: 10px; border-radius: 4px; border: 1px solid #fee2e2;">' + (error ? error.stack : "No stack trace") + '</pre>';
+      document.body.appendChild(div);
+      return false;
+    };
+  </script>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+
 </html>

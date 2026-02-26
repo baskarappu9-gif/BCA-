@@ -4,7 +4,12 @@ import { Search, TrendingUp, MapPin, BarChart3, ChevronRight, Star, Sparkles, Aw
 import PropertyCard from '../components/PropertyCard';
 import StatCard from '../components/StatCard';
 import { APP_STATS } from '../utils/constants';
-import { getTrendingCities, getProperties } from '../api/client';
+import locationsData from '../utils/locations.json';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Badge } from '../components/ui/badge';
+import { Card, CardContent } from '../components/ui/card';
+import { MainScene } from '../components/main-scene';
 
 const Home = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -12,6 +17,29 @@ const Home = () => {
   const [trendingCities, setTrendingCities] = useState([]);
   const [latestProperties, setLatestProperties] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  // Flatten locations for search
+  const allLocations = React.useMemo(() => {
+    const locations = [];
+    Object.keys(locationsData).forEach(state => {
+      locations.push({ name: state, type: 'State' });
+      Object.keys(locationsData[state]).forEach(district => {
+        locations.push({ name: district, type: 'District', parent: state });
+        locationsData[state][district].forEach(area => {
+          locations.push({ name: area, type: 'Locality', parent: district });
+        });
+      });
+    });
+    return locations;
+  }, []);
+
+  const filteredLocations = React.useMemo(() => {
+    if (!searchQuery) return [];
+    return allLocations.filter(loc =>
+      loc.name.toLowerCase().includes(searchQuery.toLowerCase())
+    ).slice(0, 8); // Limit results
+  }, [searchQuery, allLocations]);
 
   // Mock data for trending cities
   const mockTrendingCities = [
@@ -123,12 +151,10 @@ const Home = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      // Use mock data for now
       setTrendingCities(mockTrendingCities);
       setLatestProperties(mockProperties);
     } catch (error) {
       console.error('Error fetching data:', error);
-      // Fall back to mock data on error
       setTrendingCities(mockTrendingCities);
       setLatestProperties(mockProperties);
     } finally {
@@ -138,248 +164,299 @@ const Home = () => {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
+    if (activeSearchTab === 'sell') {
+      navigate('/post-property');
+    } else if (searchQuery.trim()) {
       navigate('/listings');
     }
   };
 
   return (
-    <div className="space-y-16 pb-16">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary-50 via-secondary-50 to-blue-50 opacity-60"></div>
-        <div className="absolute top-20 right-10 w-96 h-96 bg-primary-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-        <div className="absolute bottom-20 left-10 w-96 h-96 bg-secondary-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+    <div className="relative min-h-screen bg-black text-white overflow-x-hidden">
+      {/* Background 3D Scene */}
+      <div className="absolute inset-0 z-0">
+        <MainScene />
+      </div>
 
-        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 py-20">
-          <div className="flex items-center gap-2 mb-6 animate-fade-in">
-            <div className="px-4 py-1 bg-primary-500 text-white text-sm font-semibold rounded-full flex items-center gap-2">
+      <div className="relative z-10">
+        {/* Hero Section */}
+        <section className="relative pt-32 pb-20 px-4 sm:px-6">
+          <div className="max-w-7xl mx-auto text-center">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-teal-500/10 border border-teal-500/20 rounded-full text-teal-400 mb-8 animate-fade-in">
               <Sparkles className="w-4 h-4" />
-              AI-Powered Valuation
+              <span className="font-semibold text-sm">AI-Powered Real Estate Intelligence</span>
+            </div>
+
+            <h1 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight leading-tight animate-fade-in-up">
+              Know the <span className="text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-cyan-400">true value</span>
+              <br /> of any property
+            </h1>
+
+            <p className="text-xl text-gray-400 mb-12 max-w-2xl mx-auto animate-fade-in-up animation-delay-200">
+              Machine learning algorithms provide instant predictive valuations, market trends, and investment insights with 95% accuracy.
+            </p>
+
+            {/* Search Box */}
+            <div className="max-w-3xl mx-auto mt-12 relative z-20">
+              <div className="absolute -inset-1 bg-gradient-to-r from-teal-500 to-cyan-600 rounded-[2rem] blur opacity-30 animate-pulse-slow"></div>
+              <div className="relative bg-black/80 backdrop-blur-2xl border border-white/10 rounded-[1.8rem] p-3 shadow-2xl">
+
+                {/* Tabs */}
+                <div className="grid grid-cols-2 gap-2 mb-3 p-1 bg-white/5 rounded-3xl">
+                  {['buy', 'sell'].map((tab) => (
+                    <button
+                      key={tab}
+                      onClick={() => setActiveSearchTab(tab)}
+                      className={`py-3 rounded-full font-bold text-sm uppercase tracking-widest transition-all duration-300 ${activeSearchTab === tab
+                        ? 'bg-gradient-to-r from-teal-500 to-cyan-500 text-black shadow-[0_0_20px_rgba(20,184,166,0.4)]'
+                        : 'text-gray-500 hover:text-white hover:bg-white/5'
+                        }`}
+                    >
+                      {tab}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Search Field */}
+                <form onSubmit={handleSearch} className="relative group z-50">
+                  <div className="absolute inset-0 bg-gradient-to-r from-teal-500/20 to-cyan-500/20 rounded-full blur opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  <div className="relative flex items-center bg-black border border-white/10 rounded-full px-2 transition-colors group-hover:border-teal-500/30">
+                    <Search className="w-6 h-6 text-teal-500 ml-4" />
+                    <Input
+                      type="text"
+                      placeholder={activeSearchTab === 'sell' ? "Enter property location to sell..." : "Search for City, Locality, Project..."}
+                      className="flex-1 border-none bg-transparent text-white placeholder-gray-500 h-14 text-lg focus-visible:ring-0 focus-visible:ring-offset-0 px-4"
+                      value={searchQuery}
+                      onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        setShowSuggestions(true);
+                      }}
+                      onFocus={() => setShowSuggestions(true)}
+                      onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                    />
+                    <Button
+                      type="submit"
+                      className="bg-teal-500 hover:bg-teal-400 text-black font-bold h-10 px-8 rounded-full shadow-[0_0_15px_rgba(20,184,166,0.3)] transition-all hover:scale-105"
+                    >
+                      {activeSearchTab === 'sell' ? 'List It' : 'Search'}
+                    </Button>
+                  </div>
+
+                  {/* Suggestions Dropdown */}
+                  {showSuggestions && searchQuery && filteredLocations.length > 0 && (
+                    <div className="absolute top-full left-4 right-4 mt-2 bg-black/95 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden shadow-2xl z-50">
+                      {filteredLocations.map((loc, idx) => (
+                        <div
+                          key={idx}
+                          onMouseDown={() => {
+                            setSearchQuery(loc.name);
+                            setShowSuggestions(false);
+                            navigate('/listings'); // Auto-navigate on selection if desired, or just set val
+                          }}
+                          className="px-6 py-4 hover:bg-white/10 cursor-pointer border-b border-white/5 last:border-0 flex justify-between items-center group"
+                        >
+                          <div>
+                            <div className="text-white font-medium group-hover:text-teal-400 transition-colors">{loc.name}</div>
+                            {loc.parent && <div className="text-xs text-gray-500">{loc.parent} • {loc.type}</div>}
+                            {!loc.parent && <div className="text-xs text-gray-500">{loc.type}</div>}
+                          </div>
+                          <ChevronRight className="w-4 h-4 text-gray-600 group-hover:text-teal-500" />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </form>
+              </div>
             </div>
           </div>
+        </section>
 
-          <h1 className="text-4xl sm:text-6xl font-bold mb-6 animate-fade-in-up leading-tight">
-            Know the <span className="text-gradient">true value</span> of any<br />
-            property in India
-          </h1>
-
-          <p className="text-lg sm:text-xl text-gray-600 mb-12 max-w-2xl animate-fade-in-up animation-delay-200">
-            ML-powered price predictions, market trends, and expert insights - with zero brokerage. All prices in ₹
-          </p>
-
-          {/* Search Box */}
-          <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-8 animate-fade-in-up animation-delay-400">
-            <div className="grid grid-cols-3 gap-4 mb-6">
-              {['buy', 'rent', 'sell'].map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveSearchTab(tab)}
-                  className={`px-6 py-3 rounded-xl font-semibold transition-all ${activeSearchTab === tab
-                    ? 'bg-primary-500 text-white transform scale-105'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                    }`}
-                >
-                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                </button>
+        {/* Stats Section */}
+        <section className="py-12 border-y border-white/5 bg-black/20 backdrop-blur-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+              {APP_STATS.map((stat, idx) => (
+                <div key={idx} className="text-center">
+                  <div className="text-3xl md:text-4xl font-bold text-white mb-1">{stat.value}</div>
+                  <div className="text-sm text-teal-400 font-medium uppercase tracking-wider">{stat.label}</div>
+                </div>
               ))}
             </div>
-
-            <form onSubmit={handleSearch} className="relative">
-              <input
-                type="text"
-                placeholder="Search Properties..."
-                className="w-full px-6 py-4 pr-14 border-2 border-gray-200 rounded-xl focus:border-primary-500 focus:outline-none text-lg transition-all"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              <button
-                type="submit"
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-all"
-              >
-                <Search className="w-5 h-5" />
-              </button>
-            </form>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Stats Section */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
-          {APP_STATS.map((stat, idx) => (
-            <StatCard
-              key={idx}
-              label={stat.label}
-              value={stat.value}
-              iconName={stat.icon}
-              delay={idx * 100}
-            />
-          ))}
-        </div>
-      </section>
+        {/* Trending Cities */}
+        <section className="py-24 px-4 sm:px-6 max-w-7xl mx-auto">
+          <div className="flex items-center justify-between mb-12">
+            <h2 className="text-3xl font-bold text-white">Trending Cities</h2>
+            <Button variant="ghost" className="text-teal-400 hover:text-teal-300">
+              View All <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
+          </div>
 
-      {/* Trending Cities */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">Trending Cities</h2>
-          <button className="flex items-center gap-2 text-primary-500 hover:text-primary-600 font-semibold transition-colors">
-            View All <ChevronRight className="w-5 h-5" />
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {trendingCities.map((city, idx) => (
-            <div
-              key={idx}
-              className="group relative overflow-hidden rounded-2xl h-64 cursor-pointer transform transition-all hover:scale-105 hover:shadow-2xl animate-fade-in-up"
-              style={{ animationDelay: `${idx * 100}ms` }}
-            >
-              <img src={city.imageUrl} alt={city.name} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
-              <div className="absolute bottom-0 left-0 right-0 p-6">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-2xl font-bold text-white">{city.name}</h3>
-                  <div className="px-3 py-1 bg-green-500 text-white rounded-full text-sm font-semibold">
-                    {city.growth}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {trendingCities.map((city, idx) => (
+              <div
+                key={idx}
+                className="group relative h-72 rounded-2xl overflow-hidden cursor-pointer border border-white/10"
+              >
+                <img
+                  src={city.imageUrl}
+                  alt={city.name}
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity"></div>
+                <div className="absolute bottom-0 left-0 right-0 p-6">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-2xl font-bold text-white">{city.name}</h3>
+                    <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
+                      {city.growth}
+                    </Badge>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Top Investment Locations */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6">
-        <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-8">Top Investment Locations</h2>
-
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-          {investmentLocations.map((loc, idx) => (
-            <div
-              key={idx}
-              className="card cursor-pointer animate-fade-in-up"
-              style={{ animationDelay: `${idx * 50}ms` }}
-            >
-              <div className="text-sm text-gray-500 mb-1">{loc.city}</div>
-              <div className="font-bold text-gray-900 mb-2">{loc.locality}</div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1 text-amber-500">
-                  <Star className="w-4 h-4 fill-current" />
-                  <span className="text-sm font-semibold">{loc.rating}</span>
-                </div>
-                <div className="text-green-600 font-semibold text-sm">{loc.returns}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Latest Properties */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6">
-        <div className="flex items-center justify-between mb-8">
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900">Latest Properties</h2>
-          <button className="flex items-center gap-2 text-primary-500 hover:text-primary-600 font-semibold transition-colors">
-            View All <ChevronRight className="w-5 h-5" />
-          </button>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {latestProperties.map((property, idx) => (
-            <div key={property.id} style={{ animationDelay: `${idx * 100}ms` }} className="animate-fade-in-up">
-              <PropertyCard property={property} />
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Market Insights */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6">
-        <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-8">AI Market Insights</h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {marketInsights.map((insight, idx) => {
-            const Icon = insight.icon;
-            return (
-              <div
-                key={idx}
-                className="bg-gradient-to-br from-white to-primary-50 rounded-2xl p-8 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1 animate-fade-in-up"
-                style={{ animationDelay: `${idx * 100}ms` }}
-              >
-                <div className="w-14 h-14 bg-primary-500 rounded-xl flex items-center justify-center mb-4">
-                  <Icon className="w-7 h-7 text-white" />
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">{insight.title}</h3>
-                <p className="text-gray-600">{insight.desc}</p>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* Why PriceWatch */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 py-16">
-        <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-12 text-center">Why PriceWatch?</h2>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {[
-            { icon: TrendingUp, title: 'ML Price Predictions', desc: 'AI-powered valuations with 95% accuracy' },
-            { icon: DollarSign, title: 'Zero Brokerage', desc: 'Buy or sell at fair value with no fees' },
-            { icon: BarChart3, title: 'Market Intelligence', desc: 'Real-time trends and insights' },
-            { icon: Award, title: 'Complete Platform', desc: 'Seamless, end-to-end AI experience' }
-          ].map((feature, idx) => {
-            const Icon = feature.icon;
-            return (
-              <div key={idx} className="text-center animate-fade-in-up" style={{ animationDelay: `${idx * 100}ms` }}>
-                <div className="w-16 h-16 bg-primary-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <Icon className="w-8 h-8 text-primary-600" />
-                </div>
-                <h3 className="font-bold text-gray-900 mb-2">{feature.title}</h3>
-                <p className="text-sm text-gray-600">{feature.desc}</p>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-
-      {/* Testimonials - Social Proof */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6">
-        <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-12 text-center">Loved by 10,000+ Users</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {[
-            { name: "Rahul S.", role: "Home Buyer", text: "PriceWatch helped me save ₹15 Lakhs on my apartment in Whitefield. The valuation was spot on!", image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop" },
-            { name: "Priya M.", role: "Property Investor", text: "The market trends analysis covers data I couldn't find anywhere else. Absolutely essential tool.", image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop" },
-            { name: "Vikram K.", role: "Seller", text: "Posted my property and got genuine leads within 24 hours. Sold faster than I expected!", image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop" }
-          ].map((t, idx) => (
-            <div key={idx} className="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 flex flex-col items-center text-center hover:shadow-xl transition-shadow">
-              <img src={t.image} alt={t.name} className="w-16 h-16 rounded-full mb-4 object-cover ring-4 ring-primary-50" />
-              <p className="text-gray-600 italic mb-6">"{t.text}"</p>
-              <div>
-                <h4 className="font-bold text-gray-900">{t.name}</h4>
-                <span className="text-sm text-primary-500 font-semibold">{t.role}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="bg-gradient-to-r from-teal-600 to-cyan-600 rounded-3xl max-w-6xl mx-auto px-4 sm:px-6 overflow-hidden shadow-2xl relative">
-        <div className="absolute inset-0 bg-white/10 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '30px 30px' }}></div>
-        <div className="py-20 px-12 text-center relative z-10">
-          <h2 className="text-3xl sm:text-5xl font-bold text-white mb-6">Start Making Smart Property Decisions</h2>
-          <p className="text-lg sm:text-xl text-teal-50 mb-10 max-w-2xl mx-auto">Join thousands of smart buyers and investors who use PriceWatch to get fair value.</p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button onClick={() => window.location.href = '/prediction'} className="px-8 py-4 bg-white text-teal-600 rounded-xl font-bold text-lg hover:bg-gray-50 transition-all transform hover:scale-105 shadow-xl">
-              Get Free Valuation
-            </button>
-            <button onClick={() => window.location.href = '/dashboard/seller'} className="px-8 py-4 bg-teal-700 text-white border border-teal-500 rounded-xl font-bold text-lg hover:bg-teal-800 transition-all transform hover:scale-105 shadow-xl">
-              List Property
-            </button>
+            ))}
           </div>
-        </div>
-      </section>
+        </section>
+
+        {/* Market Insights */}
+        <section className="py-24 px-4 sm:px-6 bg-white/5">
+          <div className="max-w-7xl mx-auto">
+            <h2 className="text-3xl font-bold text-white mb-12">AI Market Insights</h2>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {marketInsights.map((insight, idx) => {
+                const Icon = insight.icon;
+                return (
+                  <Card key={idx} className="bg-black/40 border-white/10 backdrop-blur-sm hover:border-teal-500/50 transition-colors">
+                    <CardContent className="p-8">
+                      <div className="w-12 h-12 bg-teal-500/10 rounded-xl flex items-center justify-center mb-6">
+                        <Icon className="w-6 h-6 text-teal-400" />
+                      </div>
+                      <h3 className="text-xl font-bold text-white mb-3">{insight.title}</h3>
+                      <p className="text-gray-400 leading-relaxed">{insight.desc}</p>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+
+        {/* Latest Properties */}
+        <section className="py-24 px-4 sm:px-6 max-w-7xl mx-auto">
+          <div className="flex items-center justify-between mb-12">
+            <h2 className="text-3xl font-bold text-white">Latest Properties</h2>
+            <Button variant="ghost" className="text-teal-400 hover:text-teal-300">
+              View All <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {latestProperties.map((property, idx) => (
+              <div key={property.id} className="bg-white/5 border border-white/10 rounded-2xl overflow-hidden hover:border-teal-500/30 transition-all group">
+                <div className="relative h-64 overflow-hidden">
+                  <img
+                    src={property.images[0]}
+                    alt={property.title}
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                  {property.featured && (
+                    <div className="absolute top-4 left-4">
+                      <Badge className="bg-teal-500 text-black border-none font-bold">Featured</Badge>
+                    </div>
+                  )}
+                  <div className="absolute bottom-4 right-4 bg-black/80 backdrop-blur-md px-3 py-1 rounded-lg border border-white/10">
+                    <span className="font-bold text-white">₹ {property.price.toLocaleString()}</span>
+                  </div>
+                </div>
+                <div className="p-6">
+                  <h3 className="text-lg font-bold text-white mb-2 line-clamp-1">{property.title}</h3>
+                  <div className="flex items-center text-gray-400 text-sm mb-4">
+                    <MapPin className="w-4 h-4 mr-1 text-teal-500" />
+                    {property.location}
+                  </div>
+                  <div className="flex items-center justify-between py-4 border-t border-white/10">
+                    <div className="text-center">
+                      <div className="text-xs text-gray-500 uppercase">Size</div>
+                      <div className="font-semibold text-white">{property.size} sqft</div>
+                    </div>
+                    <div className="h-8 w-px bg-white/10"></div>
+                    <div className="text-center">
+                      <div className="text-xs text-gray-500 uppercase">Beds</div>
+                      <div className="font-semibold text-white">{property.bedrooms} BHK</div>
+                    </div>
+                    <div className="h-8 w-px bg-white/10"></div>
+                    <div className="text-center">
+                      <div className="text-xs text-gray-500 uppercase">Type</div>
+                      <div className="font-semibold text-white">Sale</div>
+                    </div>
+                  </div>
+                  <Button className="w-full bg-teal-500/10 hover:bg-teal-500/20 text-teal-400 border border-teal-500/50 mt-2">
+                    View Details
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Live Market Activity (New Feature) */}
+        <section className="py-12 bg-black border-t border-white/5 relative z-10 px-4 sm:px-6">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center gap-4 mb-8">
+              <span className="relative flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+              </span>
+              <h2 className="text-2xl font-bold text-white tracking-wide uppercase text-sm">Live Market Pulse</h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[
+                { type: 'Prediction', text: 'User in Whitefield predicted value for 3 BHK', time: '2 mins ago', color: 'bg-teal-500' },
+                { type: 'Listing', text: 'New 4 BHK Villa just listed in Sarjapur Road', time: '5 mins ago', color: 'bg-blue-500' },
+                { type: 'Alert', text: 'Price drop alert sent for Indiranagar property', time: '12 mins ago', color: 'bg-red-500' },
+                { type: 'Insight', text: 'User in Mumbai analyzed rental yields', time: '15 mins ago', color: 'bg-purple-500' }
+              ].map((activity, idx) => (
+                <div key={idx} className="bg-white/5 border border-white/10 rounded-xl p-4 flex items-start gap-4 hover:border-teal-500/30 transition-all hover:bg-white/10">
+                  <div className={`mt-1.5 w-2 h-2 rounded-full flex-shrink-0 ${activity.color}`}></div>
+                  <div>
+                    <p className="text-sm text-gray-300 font-medium mb-1 leading-snug">{activity.text}</p>
+                    <p className="text-xs text-gray-500 uppercase tracking-wider">{activity.time}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="py-24 px-4 sm:px-6">
+          <div className="max-w-5xl mx-auto text-center relative overflow-hidden bg-gradient-to-r from-teal-900/40 to-cyan-900/40 border border-teal-500/20 rounded-3xl p-12 sm:p-20">
+            <div className="absolute inset-0 bg-grid-white/5 mask-image-b"></div>
+            <div className="relative z-10">
+              <h2 className="text-4xl sm:text-5xl font-bold text-white mb-6">Start Making Smart Decisions</h2>
+              <p className="text-xl text-gray-300 mb-10 max-w-2xl mx-auto">
+                Join thousands of smart buyers and investors who use PriceWatch AI to get fair value estimates instantly.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Button size="lg" className="bg-teal-500 hover:bg-teal-600 text-black font-bold text-lg px-8 h-14">
+                  Get Free Valuation
+                </Button>
+                <Button size="lg" variant="outline" className="border-teal-500/50 text-teal-400 hover:bg-teal-950 text-lg px-8 h-14">
+                  List Property
+                </Button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Footer - Minimal */}
+        <footer className="py-12 border-t border-white/10 bg-black text-center text-gray-500 text-sm">
+          <p>&copy; 2024 PriceWatch AI. All rights reserved.</p>
+        </footer>
+      </div>
     </div>
   );
 };
